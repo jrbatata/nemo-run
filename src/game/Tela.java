@@ -8,6 +8,8 @@ import java.awt.Image;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Random;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
@@ -23,21 +25,22 @@ public class Tela extends JPanel {
     protected int bestScore;
     protected int fTime;
     protected int delay;
-    protected int vidas, xp;
+    protected int vidas, level, atualXp;
     protected int numAguas;
     protected boolean reinicia;
 
     protected ImageIcon background;
-    protected ImageIcon imgPause, imgPausePressed;
     protected ImageIcon life;
     protected ImageIcon game_over;
     protected ImageIcon[] xpBar;
-    protected JButton btPause;
+    protected ImageIcon[] stars;
 
+    protected Marlin marlin;
     protected Nemo nemo;
     protected Nadador nadador;
     protected AguaViva agua_viva;
     protected ArrayList<AguaViva> aguas_vivas;
+    protected ArrayList<AguaViva> aguas_vivas2;
     protected Opcoes sets;
 
     public Tela(Principal principal) {
@@ -45,23 +48,13 @@ public class Tela extends JPanel {
         // Inicializacao de objetos
         nemo = new Nemo(50, 200, 105, 65, 3, 5, true);
         nadador = new Nadador(-500, 130, 428, 200, 3, 5, true);
+        marlin = new Marlin(900, 200, 4, 4, nemo.velocX, nemo.velocY, true);
         background = new ImageIcon(getClass().getResource("/imagens/loop_background.png"));
         life = new ImageIcon(getClass().getResource("/imagens/life_icon.png"));
         game_over = new ImageIcon(getClass().getResource("/imagens/game_over.gif"));
-        imgPause = new ImageIcon(getClass().getResource("/imagens/button_pause.png"));
-        imgPausePressed = new ImageIcon(getClass().getResource("/imagens/button_pause_pressed.png"));
-
-        //Inicializacao do botao Pause
-        btPause = new JButton();
-        btPause.setBounds(200, 600, imgPause.getIconWidth(), imgPause.getIconHeight());
-        add(btPause);
-        btPause.setText(null);
-        btPause.setIcon(imgPause);
-        btPause.setPressedIcon(imgPausePressed);
-        btPause.setBorderPainted(false); //Tira a borda do botao
-        btPause.setContentAreaFilled(false); //Tira o fundo branco do botao
 
         aguas_vivas = new ArrayList<>();
+        aguas_vivas2 = new ArrayList<>();
         bestScore = 0;
         control = Util.MAIN; // Controla o numero de vezes que o enter foi pressionado
         inicializaComponentes();
@@ -78,20 +71,26 @@ public class Tela extends JPanel {
         this.nadador.y = 130;
 
         // Inicializacao de contadores
-        score = 0;
-        xP = 0; // Posicao x inicial do primeiro fundo
-        xA = background.getIconWidth(); // Posicao x inicial do segundo fundo
-        fTime = 0;
-        delay = 10;
-        vidas = 4;
-        xp = 0;
-        reinicia = true;
-        numAguas = 20;
+        this.score = 0;
+        this.xP = 0; // Posicao x inicial do primeiro fundo
+        this.xA = background.getIconWidth(); // Posicao x inicial do segundo fundo
+        this.fTime = 0;
+        this.delay = Util.DELAY;
+        this.vidas = 4;
+        this.level = Util.LEVEL_ONE;
+        this.atualXp = 0;
+        this.reinicia = true;
+        this.numAguas = 20;
 
         //Inicializacao da barra de nivel
-        xpBar = new ImageIcon[13];
-        for (int i = 0; i < 13; i++) {
+        this.xpBar = new ImageIcon[Util.MAX_XP];
+        for (int i = 0; i < Util.MAX_XP; i++) {
             xpBar[i] = new ImageIcon(getClass().getResource("/progress_bar/xp_" + i + ".png"));
+        }
+
+        this.stars = new ImageIcon[Util.LEVELS];
+        for (int i = 0; i < Util.LEVELS; i++) {
+            stars[i] = new ImageIcon(getClass().getResource("/imagens/level_" + i + "_icon.png"));
         }
     }
 
@@ -133,42 +132,14 @@ public class Tela extends JPanel {
             xP -= velocX;
 
             for (int i = 0; i < aguas_vivas.size(); i++) {
-                aguas_vivas.get(i).movimenta();
-                if (aguas_vivas.get(i).x < -agua_viva.largura) {
-                    aguas_vivas.get(i).ativo = false;
-                }
-                score++;
-
-                if (Util.colisao(nemo, aguas_vivas.get(i))) {
-                    Musica mu = new Musica(new File("res/choque.mp3"));
-                    mu.start();
-                    delay = 0;
-                    aguas_vivas.get(i).ativo = false;
-                    nemo.moveLeft();
-                    vidas--;
-                    if (score > 1500) {
-                        score -= 1000;
-                    } else {
-                        if (score > 150) {
-                            score -= 100;
-                        } else {
-                            score -= 50;
-                        }
-                    }
-                }
-
-                if (delay < 10) {
-                    img3 = nemo.choque.getImage();
-                    delay++;
-                } else {
-                    img3 = nemo.nadando.getImage();
-                    delay = 10;
+                if (aguas_vivas.get(i).ativo == false) {
+                    aguas_vivas.remove(i);
                 }
             }
 
-            for (int i = 0; i < aguas_vivas.size(); i++) {
-                if (aguas_vivas.get(i).ativo == false) {
-                    aguas_vivas.remove(i);
+            for (int i = 0; i < aguas_vivas2.size(); i++) {
+                if (aguas_vivas2.get(i).ativo == false) {
+                    aguas_vivas2.remove(i);
                 }
             }
 
@@ -180,28 +151,43 @@ public class Tela extends JPanel {
             g.drawImage(img2, nadador.x, nadador.y,
                     this);
         } else {
-
             img3 = nemo.parado.getImage();
-            Graphics2D g2d = (Graphics2D) g;
-            g2d.setColor(Color.WHITE);
-            g2d.setFont(new Font("Gamer", Font.PLAIN, 40));
-            g2d.drawString("PRESS ENTER TO START", 260, 240);
+            if (control == Util.START) {
+                img = (new ImageIcon(getClass().getResource("/imagens/start.gif"))).getImage();
+                g.drawImage(img, 0, 0, this);
+            }
         }
         for (AguaViva agua : aguas_vivas) {
             agua.draw(g);
         }
+
+        colisaoAguaVivas(aguas_vivas, img3);
+        if (level >= Util.LEVEL_TWO) {
+            colisaoAguaVivas(aguas_vivas2, img3);
+        }
+
+        if (delay < Util.DELAY) {
+            img3 = nemo.choque.getImage();
+            delay++;
+        } else {
+            img3 = nemo.nadando.getImage();
+            delay = Util.DELAY;
+        }
+
         progressBar(g);
         g.drawImage(img3, nemo.x, nemo.y, this);
 
         if (control == Util.GAME_OVER) {
             gameOver(g);
         }
+
         setScore(g);
         int posVidaX = -15;
         for (int i = 0; i < vidas; i++) {
             posVidaX += img4.getWidth(this) - 4;
             g.drawImage(img4, posVidaX, 35, null);
         }
+        endGame(g);
     }
 
     public void addAguaViva() {
@@ -209,6 +195,10 @@ public class Tela extends JPanel {
         Random px = new Random();
         agua_viva = new AguaViva(1200, position[px.nextInt(11)], 61, 65, 4, 4, true);
         aguas_vivas.add(agua_viva);
+        if (level >= Util.LEVEL_TWO) {
+            agua_viva = new AguaViva(1200, position[px.nextInt(11)], 61, 65, 4, 4, true);
+            aguas_vivas2.add(agua_viva);
+        }
     }
 
     public void setScore(Graphics g) {
@@ -216,6 +206,35 @@ public class Tela extends JPanel {
         g2d.setColor(Color.WHITE);
         g2d.setFont(new Font("Gamer", Font.PLAIN, 30));
         g2d.drawString("SCORE: " + score, 17, 30);
+    }
+
+    public void colisaoAguaVivas(ArrayList<AguaViva> a, Image img) {
+        for (int i = 0; i < a.size(); i++) {
+            a.get(i).movimenta();
+            if (a.get(i).x < -agua_viva.largura) {
+                a.get(i).ativo = false;
+            }
+            score++;
+
+            if (Util.colisao(nemo, a.get(i))) {
+                Musica mu = new Musica(new File("res/choque.mp3"));
+                mu.start();
+                delay = 0;
+                a.get(i).ativo = false;
+                nemo.moveLeft();
+                vidas--;
+                if (score > 1500) {
+                    score -= 1000;
+                } else {
+                    if (score > 150) {
+                        score -= 100;
+                    } else {
+                        score -= 50;
+                    }
+                }
+            }
+
+        }
     }
 
     public void gameOver(Graphics g) {
@@ -244,70 +263,117 @@ public class Tela extends JPanel {
 
     public void progressBar(Graphics g) {
         int xp = (int) score / 500;
-        int atualXp = 0;
         Image img;
-        switch (xp) {
-            case 1:
-                atualXp = 1;
-                break;
-            case 2:
-                atualXp = 1;
-                break;
-            case 3:
-                atualXp = 2;
-                break;
-            case 4:
-                atualXp = 3;
-                break;
-            case 5:
-                atualXp = 4;
-                break;
-            case 6:
-                atualXp = 5;
-                break;
-            case 7:
-                atualXp = 6;
-                break;
-            case 8:
-                atualXp = 7;
-                break;
-            case 9:
-                atualXp = 8;
-                break;
-            case 10:
-                atualXp = 9;
-                break;
-            case 11:
-                atualXp = 10;
-                break;
-            case 12:
-                atualXp = 11;
-                break;
-            case 13:
-                atualXp = 12;
-                break;
-        }
-        if (atualXp > 4) {
-            agua_viva.velocX = atualXp;
-            nemo.velocY = atualXp;
-            nadador.velocY = atualXp;
-            if (numAguas > 15) {
-                numAguas--;
+        if (score >= 14000) {
+            xp = (int) ((score - 14000) / 500);
+        } else {
+            if (score >= 7000) {
+                xp = (int) ((score - 7000) / 500);
             }
         }
 
-        if (xp < 3 && atualXp == 5) {
-            xp++;
-            for (int i = 1; i - 1 < xp; i++) {
-                img = (new ImageIcon(getClass().getResource("/imagens/star_icon.png"))).getImage();
-                g.drawImage(img, x - img.getWidth(this), 8, this);
-                System.out.println(i + " " + xp);
+        switch (xp) {
+            case 0:
+                this.atualXp = 0;
+                break;
+            case 1:
+                this.atualXp = 1;
+                break;
+            case 2:
+                this.atualXp = 2;
+                break;
+            case 3:
+                this.atualXp = 3;
+                break;
+            case 4:
+                this.atualXp = 4;
+                break;
+            case 5:
+                this.atualXp = 5;
+                break;
+            case 6:
+                this.atualXp = 6;
+                break;
+            case 7:
+                this.atualXp = 7;
+                break;
+            case 8:
+                this.atualXp = 8;
+                break;
+            case 9:
+                this.atualXp = 9;
+                break;
+            case 10:
+                this.atualXp = 10;
+                break;
+            case 11:
+                this.atualXp = 11;
+                break;
+            case 12:
+                this.atualXp = 12;
+                break;
+            case 13:
+                this.atualXp = 13;
+                break;
+            case 14:
+                this.atualXp = 14;
+                break;
+        }
+
+        //Aumenta a velocidade das águas vivas
+        if (level >= Util.LEVEL_TWO) {
+            agua_viva.velocX = 14;
+            nemo.velocY = 14;
+            nadador.velocY = 14;
+            if (numAguas > 15) {
+                numAguas--;
+            }
+        } else {
+            if (atualXp > 4) {
+                agua_viva.velocX = atualXp;
+                nemo.velocY = atualXp;
+                nadador.velocY = atualXp;
+                if (numAguas > 20) {
+                    numAguas--;
+                }
             }
         }
 
         img = xpBar[atualXp].getImage();
         int x = getWidth() - img.getWidth(this);
         g.drawImage(img, x, 8, null);
-        
+
+        Graphics2D g2d = (Graphics2D) g;
+        g2d.setColor(Color.WHITE);
+        g2d.setFont(new Font("Gamer", Font.PLAIN, 25));
+        g2d.drawString("LEVEL " + level, getWidth() - 115, 60);
+
+        if (score >= 14000) {
+            level = Util.LEVEL_THREE;
+            img = stars[2].getImage();
+        } else {
+            if (score >= 7000) {
+                level = Util.LEVEL_TWO;
+                img = stars[1].getImage();
+            } else {
+                img = stars[0].getImage();
+            }
+        }
+        g.drawImage(img, x - img.getWidth(this), 8, null);
+    }
+
+    public void endGame(Graphics g) {
+        Image father = (new ImageIcon(getClass().getResource("/imagens/marlin.gif"))).getImage();
+        Image finalImg = (new ImageIcon(getClass().getResource("/imagens/win.gif"))).getImage();
+        if (score >= 21000) { //21000
+            if (Util.colisao(nemo, marlin)) {
+                g.drawImage(finalImg, 0, 0, this);
+                control = Util.WIN;
+            } else {
+                marlin.x -= 5;
+                marlin.y = nemo.y;
+                g.drawImage(father, marlin.x, marlin.y, this);
+            }
+        }
     }
 }

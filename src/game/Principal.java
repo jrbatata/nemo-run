@@ -12,16 +12,19 @@ import javax.swing.JFrame;
 public class Principal extends JFrame implements ActionListener, KeyListener {
 
     protected boolean[] controleTecla = new boolean[2]; // vetor para armazenar as teclas pressionadas
-    protected boolean jogando; //verifica de o usuario esta jogando
+    protected boolean jogando; //Verifica de o usuario esta jogando
+    protected boolean tocando; //Verifica se a musica de game over esta tocando
     protected int contAguas;
     protected Menu menu;
     protected Tela tela;
     protected Instrucoes inst;
     protected Opcoes sets;
-    protected Musica musica;
+    protected Musica menu_song;
+    protected Musica game_song;
+    protected Musica end_song;
 
     public Principal() {
-        musica = new Musica(new File("res/menu.mp3"));
+        menu_song = new Musica(new File("res/menu.mp3"));
         menu = new Menu(this);
         tela = new Tela(this);
         inst = new Instrucoes(this);
@@ -35,7 +38,6 @@ public class Principal extends JFrame implements ActionListener, KeyListener {
         setVisible(true);
         add(menu);
 
-        tela.btPause.addActionListener(this);
         tela.addKeyListener(this);
         tela.setFocusable(true);
 
@@ -55,6 +57,7 @@ public class Principal extends JFrame implements ActionListener, KeyListener {
 
         contAguas = 0;
         jogando = true;
+        tocando = false;
     }
 
     public static void main(String[] args) {
@@ -64,7 +67,7 @@ public class Principal extends JFrame implements ActionListener, KeyListener {
 
     public void iniciaAnimacao() {
         if (sets.music) {
-            musica.start();
+            menu_song.start();
         }
 
         while (jogando) {
@@ -84,14 +87,17 @@ public class Principal extends JFrame implements ActionListener, KeyListener {
                 Thread.sleep(45);
                 if (Util.colisao(tela.nemo, tela.nadador)) {
                     tela.control = Util.GAME_OVER;
+                    tela.nemo.x += 10;
+                    game_song.suspend();
+                    if (!tocando) {
+                        end_song = new Musica(new File("res/game_over.mp3"));
+                        end_song.start();
+                        tocando = true;
+                    }
                 }
                 contAguas++;
             } catch (InterruptedException e) {
                 Logger.getLogger(Principal.class.getName()).log(Level.SEVERE, null, e);
-            }
-            if (tela.control == Util.GAME_OVER) {
-                Musica m = new Musica(new File("res/game_over.mp3"));
-                m.start();
             }
         }
     }
@@ -99,6 +105,16 @@ public class Principal extends JFrame implements ActionListener, KeyListener {
     @Override
     public void keyPressed(KeyEvent e) {
         int tecla = e.getKeyCode();
+        if (tecla == KeyEvent.VK_ESCAPE) {
+            tela.setVisible(false);
+            add(menu);
+            menu.setVisible(true);
+            menu.requestFocus();
+            tela.control = Util.MAIN;
+            tela.inicializaComponentes();
+            tela.addKeyListener(this);
+            tela.setFocusable(true);
+        }
         setKey(tecla, true);
     }
 
@@ -117,15 +133,24 @@ public class Principal extends JFrame implements ActionListener, KeyListener {
         }
         //Botoes do Menu Principal
         if (e.getSource().equals(menu.btStart)) {
+            
+            tela = new Tela(this);
+            
             if (sets.music) {
-                musica.stop();
-                Musica m = new Musica(new File("res/corrida.mp3"));
-                m.start();
+                menu_song.stop();
+                game_song = new Musica(new File("res/corrida.mp3"));
+                game_song.start();
             }
+            
             menu.setVisible(false);
-            this.add(this.tela);
+            add(tela);
+            
+            tela.control = Util.START;
+            tela.addKeyListener(this);
             tela.requestFocus();
-            tela.control = Util.PLAYING;
+            tela.setFocusable(true);
+            tela.setVisible(true);
+          
         } else {
             if (e.getSource().equals(menu.btInst)) {
                 menu.setVisible(false);
@@ -161,21 +186,15 @@ public class Principal extends JFrame implements ActionListener, KeyListener {
         //Botoes de Opcoes
         sets.switchButton(e);
         if (sets.music) {
-            musica.resume();
+            menu_song.resume();
         } else {
-            musica.suspend();
+            menu_song.suspend();
         }
 
         if (e.getSource().equals(sets.btBack)) {
             sets.setVisible(false);
             menu.setVisible(true);
             menu.requestFocus();
-        }
-
-        //Botoes do Jogo
-        if (e.getSource().equals(tela.btPause)) {
-            //Aqui fica o código de pausar a tela
-            System.out.println("pause");
         }
     }
 
@@ -186,6 +205,15 @@ public class Principal extends JFrame implements ActionListener, KeyListener {
                 if (tela.control >= Util.GAME_OVER) {
                     tela.control = Util.PLAYING;
                     tela.inicializaComponentes();
+                    if (sets.music) {
+                        if (tela.score >= 21000) {
+                            end_song.suspend();
+                            tocando = false;
+                        } else {
+                            game_song.resume();
+
+                        }
+                    }
                 }
                 break;
             case KeyEvent.VK_UP:

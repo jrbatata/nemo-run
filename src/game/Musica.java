@@ -3,6 +3,9 @@ package game;
 import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javazoom.jl.decoder.JavaLayerException;
 import javazoom.jl.player.Player;
 
 public class Musica extends Thread {
@@ -22,7 +25,6 @@ public class Musica extends Thread {
 
             this.player = new Player(bis);
             this.player.play();
-            
         } catch (Exception e) {
             e.printStackTrace();
         }
