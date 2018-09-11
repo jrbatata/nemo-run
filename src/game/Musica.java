@@ -12,6 +12,7 @@ public class Musica extends Thread {
 
     private File mp3;
     private Player player;
+    boolean loop;
 
     public Musica(File mp3){
         this.mp3 = mp3;
@@ -19,6 +20,7 @@ public class Musica extends Thread {
     
     @Override
     public void run() {
+        do{
         try {
             FileInputStream fis = new FileInputStream(mp3);
             BufferedInputStream bis = new BufferedInputStream(fis);
@@ -28,5 +30,6 @@ public class Musica extends Thread {
         } catch (Exception e) {
             e.printStackTrace();
         }
+        }while(loop);
     }
 }

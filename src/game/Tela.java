@@ -42,6 +42,7 @@ public class Tela extends JPanel {
     protected ArrayList<AguaViva> aguas_vivas;
     protected ArrayList<AguaViva> aguas_vivas2;
     protected Opcoes sets;
+    protected boolean stopGame;
 
     public Tela(Principal principal) {
 
@@ -58,6 +59,7 @@ public class Tela extends JPanel {
         bestScore = 0;
         control = Util.MAIN; // Controla o numero de vezes que o enter foi pressionado
         inicializaComponentes();
+        stopGame = false;
     }
 
     public void inicializaComponentes() {
@@ -106,43 +108,44 @@ public class Tela extends JPanel {
 
         if (control >= Util.PLAYING && control < Util.GAME_OVER) {
             img3 = nemo.nadando.getImage();
-            // Verifica a posicao do nemo e do nadador
-            if (fTime == 0) {
-                if (nemo.x == 395) {
-                    fTime = 1;
+            if (stopGame != true) {
+                // Verifica a posicao do nemo e do nadador
+                if (fTime == 0) {
+                    if (nemo.x == 395) {
+                        fTime = 1;
+                    }
+                    if (nemo.x < 395) {
+                        nemo.moveRight();
+                    }
+                    if (nadador.x < -200) {
+                        nadador.x += nadador.velocX;
+                    }
                 }
-                if (nemo.x < 395) {
-                    nemo.moveRight();
+
+                // Verifica se um dos backgrounds chegou ao inicio da tela
+                if (xA == 0) {
+                    xP = background.getIconWidth();
                 }
-                if (nadador.x < -200) {
-                    nadador.x += nadador.velocX;
+                if (xP == 0) {
+                    xA = background.getIconWidth();
+                }
+
+                // Decrementa as posicoes
+                xA -= velocX;
+                xP -= velocX;
+
+                for (int i = 0; i < aguas_vivas.size(); i++) {
+                    if (aguas_vivas.get(i).ativo == false) {
+                        aguas_vivas.remove(i);
+                    }
+                }
+
+                for (int i = 0; i < aguas_vivas2.size(); i++) {
+                    if (aguas_vivas2.get(i).ativo == false) {
+                        aguas_vivas2.remove(i);
+                    }
                 }
             }
-
-            // Verifica se um dos backgrounds chegou ao inicio da tela
-            if (xA == 0) {
-                xP = background.getIconWidth();
-            }
-            if (xP == 0) {
-                xA = background.getIconWidth();
-            }
-
-            // Decrementa as posicoes
-            xA -= velocX;
-            xP -= velocX;
-
-            for (int i = 0; i < aguas_vivas.size(); i++) {
-                if (aguas_vivas.get(i).ativo == false) {
-                    aguas_vivas.remove(i);
-                }
-            }
-
-            for (int i = 0; i < aguas_vivas2.size(); i++) {
-                if (aguas_vivas2.get(i).ativo == false) {
-                    aguas_vivas2.remove(i);
-                }
-            }
-
             // Desenha na ordem os backgrounds e o nadador
             g.drawImage(img, xP, y
                     - 15, null);
@@ -157,6 +160,7 @@ public class Tela extends JPanel {
                 g.drawImage(img, 0, 0, this);
             }
         }
+
         for (AguaViva agua : aguas_vivas) {
             agua.draw(g);
         }
@@ -210,30 +214,32 @@ public class Tela extends JPanel {
 
     public void colisaoAguaVivas(ArrayList<AguaViva> a, Image img) {
         for (int i = 0; i < a.size(); i++) {
-            a.get(i).movimenta();
-            if (a.get(i).x < -agua_viva.largura) {
-                a.get(i).ativo = false;
-            }
-            score++;
+            if (stopGame != true) {
+                a.get(i).movimenta();
+                if (a.get(i).x < -agua_viva.largura) {
+                    a.get(i).ativo = false;
+                }
+                score++;
 
-            if (Util.colisao(nemo, a.get(i))) {
-                Musica mu = new Musica(new File("res/choque.mp3"));
-                mu.start();
-                delay = 0;
-                a.get(i).ativo = false;
-                nemo.moveLeft();
-                vidas--;
-                if (score > 1500) {
-                    score -= 1000;
-                } else {
-                    if (score > 150) {
-                        score -= 100;
+                if (Util.colisao(nemo, a.get(i))) {
+                    Musica mu = new Musica(new File("res/choque.mp3"));
+                    mu.start();
+                    delay = 0;
+                    a.get(i).ativo = false;
+                    nemo.moveLeft();
+                    vidas--;
+                    if (score > 1500) {
+                        score -= 1000;
                     } else {
-                        score -= 50;
+                        if (score > 150) {
+                            score -= 100;
+                        } else {
+                            score -= 50;
+                        }
                     }
                 }
-            }
 
+            }
         }
     }
 
