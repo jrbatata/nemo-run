@@ -1,12 +1,16 @@
 package game;
 
+import java.awt.Image;
+import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.io.File;
+import java.net.URL;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.swing.ImageIcon;
 import javax.swing.JFrame;
 
 public class Principal extends JFrame implements ActionListener, KeyListener {
@@ -33,13 +37,14 @@ public class Principal extends JFrame implements ActionListener, KeyListener {
         inst = new Instrucoes(this);
         sets = new Opcoes(this);
 
-        setTitle("Nemo Run");
-        setSize(850, 580);
-        setLocationRelativeTo(null);
-        setResizable(false);
-        setDefaultCloseOperation(EXIT_ON_CLOSE);
-        setVisible(true);
-        add(menu);
+        this.setIconImage(Toolkit.getDefaultToolkit().getImage(getClass().getResource("/imagens/icon.png")));
+        this.setTitle("Nemo Run");
+        this.setSize(850, 580);
+        this.setLocationRelativeTo(null);
+        this.setResizable(false);
+        this.setDefaultCloseOperation(EXIT_ON_CLOSE);
+        this.setVisible(true);
+        this.add(menu);
 
         tela.addKeyListener(this);
         tela.setFocusable(true);
