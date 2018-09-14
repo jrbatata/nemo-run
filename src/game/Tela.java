@@ -8,11 +8,8 @@ import java.awt.Image;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Random;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import javax.swing.ImageIcon;
-import javax.swing.JButton;
 import javax.swing.JPanel;
 
 public class Tela extends JPanel {
@@ -28,21 +25,21 @@ public class Tela extends JPanel {
     protected int vidas, level, atualXp;
     protected int numAguas;
     protected boolean reinicia;
+    protected boolean stopGame;
+    protected boolean pausaTecla;
 
     protected ImageIcon background;
     protected ImageIcon life;
     protected ImageIcon game_over;
     protected ImageIcon[] xpBar;
     protected ImageIcon[] stars;
-
-    protected Marlin marlin;
     protected Nemo nemo;
     protected Nadador nadador;
     protected AguaViva agua_viva;
     protected ArrayList<AguaViva> aguas_vivas;
     protected ArrayList<AguaViva> aguas_vivas2;
+    protected Marlin marlin;
     protected Opcoes sets;
-    protected boolean stopGame;
 
     public Tela(Principal principal) {
 
@@ -81,9 +78,15 @@ public class Tela extends JPanel {
         this.vidas = 4;
         this.level = Util.LEVEL_ONE;
         this.atualXp = 0;
-        this.reinicia = true;
         this.numAguas = 20;
+        this.reinicia = true;
+        pausaTecla = false;
 
+        if (aguas_vivas.size() > 0) {
+            aguas_vivas.clear();
+            aguas_vivas2.clear();
+
+        }
         //Inicializacao da barra de nivel
         this.xpBar = new ImageIcon[Util.MAX_XP];
         for (int i = 0; i < Util.MAX_XP; i++) {
@@ -191,6 +194,7 @@ public class Tela extends JPanel {
             posVidaX += img4.getWidth(this) - 4;
             g.drawImage(img4, posVidaX, 35, null);
         }
+        pause(g);
         endGame(g);
     }
 
@@ -214,7 +218,7 @@ public class Tela extends JPanel {
 
     public void colisaoAguaVivas(ArrayList<AguaViva> a, Image img) {
         for (int i = 0; i < a.size(); i++) {
-            if (stopGame != true) {
+            if (stopGame != true && control == Util.PLAYING) {
                 a.get(i).movimenta();
                 if (a.get(i).x < -agua_viva.largura) {
                     a.get(i).ativo = false;
@@ -238,14 +242,13 @@ public class Tela extends JPanel {
                         }
                     }
                 }
-
             }
         }
     }
 
     public void gameOver(Graphics g) {
         Image img = game_over.getImage();
-        nemo.x = 200;
+        nemo.x = 250;
         nemo.y = 200;
         g.drawImage(img, 190, 150, null);
         for (int i = 0; i < aguas_vivas.size(); i++) {
@@ -371,7 +374,7 @@ public class Tela extends JPanel {
     public void endGame(Graphics g) {
         Image father = (new ImageIcon(getClass().getResource("/imagens/marlin.gif"))).getImage();
         Image finalImg = (new ImageIcon(getClass().getResource("/imagens/win.gif"))).getImage();
-        if (score >= 21000) { //21000
+        if (score >= 20800 && !stopGame) { //21000
             if (Util.colisao(nemo, marlin)) {
                 g.drawImage(finalImg, 0, 0, this);
                 control = Util.WIN;
@@ -380,6 +383,13 @@ public class Tela extends JPanel {
                 marlin.y = nemo.y;
                 g.drawImage(father, marlin.x, marlin.y, this);
             }
+        }
+    }
+
+    public void pause(Graphics g) {
+        Image paused = (new ImageIcon(getClass().getResource("/imagens/paused.gif"))).getImage();
+        if (pausaTecla) {
+            g.drawImage(paused, 0, 0, null);
         }
     }
 }

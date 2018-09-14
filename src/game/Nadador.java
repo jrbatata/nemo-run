@@ -8,8 +8,8 @@ public class Nadador extends Objeto {
 
     public Nadador(int x, int y, int largura, int altura, int velocX, int velocY, boolean ativo) {
         super(x, y, largura, altura, velocX, velocY, ativo);
-        this.altMin = 145;
-        this.altMax = 520;
+        this.altMin = 165;
+        this.altMax = 515;
 
         this.nadador = new ImageIcon(getClass().getResource("/imagens/nadador.gif"));
     }

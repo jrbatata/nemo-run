@@ -10,8 +10,8 @@ public class Nemo extends Objeto {
 
     public Nemo(int x, int y, int largura, int altura, int velocX, int velocY, boolean ativo) {
         super(x, y, largura, altura, velocX, velocY, ativo);
-        this.altMin = 80;
-        this.altMax = 470;
+        this.altMin = 100;
+        this.altMax = 465;
 
         //Inicializa��o das imagens
         this.nadando = new ImageIcon(getClass().getResource("/imagens/nemo_swimming.gif"));
