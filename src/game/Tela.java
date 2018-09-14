@@ -70,7 +70,7 @@ public class Tela extends JPanel {
         this.nadador.y = 130;
 
         // Inicializacao de contadores
-        this.score = 0;
+        this.score = 20000;
         this.xP = 0; // Posicao x inicial do primeiro fundo
         this.xA = background.getIconWidth(); // Posicao x inicial do segundo fundo
         this.fTime = 0;
@@ -78,7 +78,7 @@ public class Tela extends JPanel {
         this.vidas = 4;
         this.level = Util.LEVEL_ONE;
         this.atualXp = 0;
-        this.numAguas = 20;
+        this.numAguas = 35;
         this.reinicia = true;
         pausaTecla = false;
 
@@ -168,10 +168,12 @@ public class Tela extends JPanel {
             agua.draw(g);
         }
 
-        colisaoAguaVivas(aguas_vivas, img3);
-        if (level >= Util.LEVEL_TWO) {
-            colisaoAguaVivas(aguas_vivas2, img3);
+        for (AguaViva agua : aguas_vivas2) {
+            agua.draw(g);
         }
+
+        colisaoAguaVivas(aguas_vivas, img3);
+        colisaoAguaVivas(aguas_vivas2, img3);
 
         if (delay < Util.DELAY) {
             img3 = nemo.choque.getImage();
@@ -184,10 +186,6 @@ public class Tela extends JPanel {
         progressBar(g);
         g.drawImage(img3, nemo.x, nemo.y, this);
 
-        if (control == Util.GAME_OVER) {
-            gameOver(g);
-        }
-
         setScore(g);
         int posVidaX = -15;
         for (int i = 0; i < vidas; i++) {
@@ -195,6 +193,11 @@ public class Tela extends JPanel {
             g.drawImage(img4, posVidaX, 35, null);
         }
         pause(g);
+        if (control == Util.GAME_OVER) {
+            aguas_vivas.clear();
+            aguas_vivas2.clear();
+            gameOver(g);
+        }
         endGame(g);
     }
 
@@ -202,7 +205,11 @@ public class Tela extends JPanel {
         int[] position = {80, 100, 125, 150, 200, 225, 250, 300, 325, 350, 400};
         Random px = new Random();
         agua_viva = new AguaViva(1200, position[px.nextInt(11)], 61, 65, 4, 4, true);
-        aguas_vivas.add(agua_viva);
+        
+        if (level == Util.LEVEL_ONE) {
+            aguas_vivas.add(agua_viva);
+        }
+
         if (level >= Util.LEVEL_TWO) {
             agua_viva = new AguaViva(1200, position[px.nextInt(11)], 61, 65, 4, 4, true);
             aguas_vivas2.add(agua_viva);

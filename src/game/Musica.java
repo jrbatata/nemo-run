@@ -12,24 +12,24 @@ public class Musica extends Thread {
 
     private File mp3;
     private Player player;
-    boolean loop;
+    protected boolean loop;
 
-    public Musica(File mp3){
+    public Musica(File mp3) {
         this.mp3 = mp3;
     }
-    
+
     @Override
     public void run() {
-        do{
-        try {
-            FileInputStream fis = new FileInputStream(mp3);
-            BufferedInputStream bis = new BufferedInputStream(fis);
+        do {
+            try {
+                FileInputStream fis = new FileInputStream(mp3);
+                BufferedInputStream bis = new BufferedInputStream(fis);
 
-            this.player = new Player(bis);
-            this.player.play();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        }while(loop);
+                this.player = new Player(bis);
+                this.player.play();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        } while (loop);
     }
 }
