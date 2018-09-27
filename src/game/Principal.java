@@ -253,6 +253,8 @@ public class Principal extends JFrame implements ActionListener, KeyListener {
     private void setKey(int tecla, boolean pressionada) { //metodo para saber se a tecla esta pressionada
         switch (tecla) {
             case KeyEvent.VK_ENTER:
+                tela.pausaTecla = false;
+                tela.stopGame = false;
                 tela.control++;
                 if (sets.sound) {
                     if (tela.control >= Util.START && tela.control < Util.GAME_OVER) {

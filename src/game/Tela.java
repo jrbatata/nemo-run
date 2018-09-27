@@ -70,7 +70,7 @@ public class Tela extends JPanel {
         this.nadador.y = 130;
 
         // Inicializacao de contadores
-        this.score = 20000;
+        this.score = 0;
         this.xP = 0; // Posicao x inicial do primeiro fundo
         this.xA = background.getIconWidth(); // Posicao x inicial do segundo fundo
         this.fTime = 0;
@@ -202,17 +202,19 @@ public class Tela extends JPanel {
     }
 
     public void addAguaViva() {
-        int[] position = {80, 100, 125, 150, 200, 225, 250, 300, 325, 350, 400};
-        Random px = new Random();
-        agua_viva = new AguaViva(1200, position[px.nextInt(11)], 61, 65, 4, 4, true);
-        
-        if (level == Util.LEVEL_ONE) {
-            aguas_vivas.add(agua_viva);
-        }
-
-        if (level >= Util.LEVEL_TWO) {
+        if (stopGame != true) {
+            int[] position = {80, 100, 125, 150, 200, 225, 250, 300, 325, 350, 400};
+            Random px = new Random();
             agua_viva = new AguaViva(1200, position[px.nextInt(11)], 61, 65, 4, 4, true);
-            aguas_vivas2.add(agua_viva);
+
+            if (level == Util.LEVEL_ONE) {
+                aguas_vivas.add(agua_viva);
+            }
+
+            if (level >= Util.LEVEL_TWO) {
+                agua_viva = new AguaViva(1200, position[px.nextInt(11)], 61, 65, 4, 4, true);
+                aguas_vivas2.add(agua_viva);
+            }
         }
     }
 
@@ -338,7 +340,7 @@ public class Tela extends JPanel {
 
         //Aumenta a velocidade das águas vivas
         if (level >= Util.LEVEL_TWO) {
-            agua_viva.velocX = 14;
+            agua_viva.velocX = 10;
             nemo.velocY = 14;
             nadador.velocY = 14;
             if (numAguas > 15) {
@@ -360,19 +362,25 @@ public class Tela extends JPanel {
         g.drawImage(img, x, 8, null);
 
         Graphics2D g2d = (Graphics2D) g;
-        g2d.setColor(Color.WHITE);
-        g2d.setFont(new Font("Gamer", Font.PLAIN, 25));
-        g2d.drawString("LEVEL " + level, getWidth() - 115, 60);
 
         if (score >= 14000) {
             level = Util.LEVEL_THREE;
+            g2d.setColor(Color.WHITE);
+            g2d.setFont(new Font("Gamer", Font.PLAIN, 25));
+            g2d.drawString("LEVEL 3", getWidth() - 115, 60);
             img = stars[2].getImage();
         } else {
             if (score >= 7000) {
                 level = Util.LEVEL_TWO;
+                g2d.setColor(Color.WHITE);
+                g2d.setFont(new Font("Gamer", Font.PLAIN, 25));
+                g2d.drawString("LEVEL 2", getWidth() - 115, 60);
                 img = stars[1].getImage();
             } else {
                 img = stars[0].getImage();
+                g2d.setColor(Color.WHITE);
+                g2d.setFont(new Font("Gamer", Font.PLAIN, 25));
+                g2d.drawString("LEVEL 1", getWidth() - 115, 60);
             }
         }
         g.drawImage(img, x - img.getWidth(this), 8, null);
@@ -383,6 +391,8 @@ public class Tela extends JPanel {
         Image finalImg = (new ImageIcon(getClass().getResource("/imagens/win.gif"))).getImage();
         if (score >= 20800 && !stopGame) { //21000
             if (Util.colisao(nemo, marlin)) {
+                aguas_vivas.clear();
+                aguas_vivas2.clear();
                 g.drawImage(finalImg, 0, 0, this);
                 control = Util.WIN;
             } else {
